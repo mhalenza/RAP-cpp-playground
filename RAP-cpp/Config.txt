@@ -1,0 +1,32 @@
+[Logger]
+LogLevel = Noise
+Format   = "%y/%m/%d %H:%M:%S %F:%l %D[%I] %L:  %x%n"
+
+[Logger "ConsoleSink"]
+Enabled = true
+Deferred = false
+FatalFormat     = "%Cy%H:%M:%S %Cm%D[%I] %Qr%Cx%L:  %x%R%n"
+CriticalFormat  = "%Cy%H:%M:%S %Cm%D[%I] %CR%L:  %x%R%n"
+ErrorFormat     = "%Cy%H:%M:%S %Cm%D[%I] %Cr%L:  %x%R%n"
+WarningFormat   = "%Cy%H:%M:%S %Cm%D[%I] %CY%L:  %x%R%n"
+NoticeFormat    = "%Cy%H:%M:%S %Cm%D[%I] %CM%L:  %x%R%n"
+InfoFormat      = "%Cy%H:%M:%S %Cm%D[%I] %CB%L:  %x%R%n"
+DebugFormat     = "%Cy%H:%M:%S %Cm%D[%I] %Cw%L:  %x%R%n"
+NoiseFormat     = "%Cy%H:%M:%S %Cm%D[%I] %CX%L:  %x%R%n"
+
+[Logger "FileSink"]
+Enabled = false
+Deferred = true
+FilenameTemplate = "Logs/Demo_{0:%Y.%m.%d_%H.%M.%S}.txt"
+
+[Logger "PbFileSink"]
+Enabled = false
+Deferred = true
+FilenameTemplate = "Logs/Demo_{0:%Y.%m.%d_%H.%M.%S}.pbin"
+
+[DomainLogLevels "ConsoleSink"]
+
+
+[RegisterOperationLogging]
+Enabled = false
+FilenameTemplate = "Logs/RegOps_{0:%Y.%m.%d_%H.%M.%S}.txt"
