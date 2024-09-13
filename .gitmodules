@@ -1,0 +1,21 @@
+[submodule "YALF"]
+	path = YALF
+	url = https://github.com/mhalenza/YALF.git
+[submodule "RTF"]
+	path = RTF
+	url = https://github.com/mhalenza/RTF.git
+[submodule "ACFP"]
+	path = ACFP
+	url = https://github.com/mhalenza/ACFP.git
+[submodule "RAP-cpp/ACFP"]
+	path = RAP-cpp/ACFP
+	url = https://github.com/mhalenza/ACFP.git
+[submodule "RAP-cpp/RTF"]
+	path = RAP-cpp/RTF
+	url = https://github.com/mhalenza/RTF.git
+[submodule "RAP-cpp/YALF"]
+	path = RAP-cpp/YALF
+	url = https://github.com/mhalenza/YALF.git
+[submodule "RAP-cpp/RAP"]
+	path = RAP-cpp/RAP
+	url = https://github.com/mhalenza/RAP-cpp.git
