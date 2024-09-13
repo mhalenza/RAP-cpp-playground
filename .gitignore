@@ -1,0 +1,9 @@
+/.vs/
+/.vscode/
+/x64/
+/x32/
+/vcpkg_installed/
+/RAP-cpp/*.vcxproj.filters
+/RAP-cpp/*.vcxproj.user
+/RAP-cpp/x64/
+/RAP-cpp/x32/
