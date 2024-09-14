@@ -160,6 +160,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MessageSizingExplore.cpp" />
     <ClCompile Include="RAP\SyncPairedIpcTransports.cpp" />
+    <ClCompile Include="RAP\SyncUdpTransport.cpp" />
     <ClCompile Include="RrtTests.cpp" />
     <ClCompile Include="SerdesTests.cpp" />
   </ItemGroup>
