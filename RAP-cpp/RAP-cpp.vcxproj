@@ -144,6 +144,7 @@
   <ItemGroup>
     <ClInclude Include="ACFP\ACFP.h" />
     <ClInclude Include="RAP\Configuration.h" />
+    <ClInclude Include="RAP\CRCpp\inc\CRC.h" />
     <ClInclude Include="RAP\RegisterTarget.h" />
     <ClInclude Include="RAP\Serdes.h" />
     <ClInclude Include="RAP\ServerAdapter.h" />
@@ -157,6 +158,7 @@
     <ClCompile Include="ConfigureLogger.cpp" />
     <ClCompile Include="ConfigureRtf.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MessageSizingExplore.cpp" />
     <ClCompile Include="RAP\SyncPairedIpcTransports.cpp" />
     <ClCompile Include="RrtTests.cpp" />
     <ClCompile Include="SerdesTests.cpp" />
