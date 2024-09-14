@@ -8,7 +8,7 @@ static inline
 void checkCmd(CmdType const& in)
 {
     auto serdes = RAP::Serdes::Serdes<Cfg>(256);
-    LOG_INFO(&in, "Checking");
+    //LOG_INFO(&in, "Checking");
     auto const buf = serdes.encodeCommand(in);
     auto const out = serdes.decodeCommand(buf);
     auto const buf2 = serdes.encodeCommand(out);
@@ -21,7 +21,7 @@ static inline
 void checkResp(RespType const& in)
 {
     auto serdes = RAP::Serdes::Serdes<Cfg>(256);
-    LOG_INFO(&in, "Checking");
+    //LOG_INFO(&in, "Checking");
     auto const buf = serdes.encodeResponse(in);
     auto const out = serdes.decodeResponse(buf);
     auto const buf2 = serdes.encodeResponse(out);
@@ -35,7 +35,7 @@ void checkResp(RespType const& in)
 #define GEN_ADDR_RNG   GENERATE(Catch::Generators::take(1, Catch::Generators::chunk(8, Catch::Generators::random<CFG::AddressType>(0, (1ULL << CFG::AddressBits) - 1))))
 #define GEN_DATA_RNG   GENERATE(Catch::Generators::take(1, Catch::Generators::chunk(8, Catch::Generators::random<CFG::DataType>(0, (1ULL << CFG::DataBits) - 1))))
 #define GEN_POSTED     GENERATE(false, true)
-#define GEN_COUNT      GENERATE(Catch::Generators::take(1, Catch::Generators::random<uint8_t>(0, 0xff)))
+#define GEN_COUNT      GENERATE(uint8_t(31)) // Rap_A48D64L2C4 ReadSeqCommand has a limit of 31
 
 struct Rap_A24D32L2C2 {
     using AddressType = uint32_t;
