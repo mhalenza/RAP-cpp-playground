@@ -183,3 +183,201 @@ TEST_CASE("Explore RapRegisterTarget", "[Explore][RRT]")
     }
     #endif
 }
+
+struct CFG
+{
+    using AddressType = uint32_t;
+    static constexpr uint8_t AddressBits = 8;
+    static constexpr uint8_t AddressBytes = 4;
+    using DataType = uint16_t;
+    static constexpr uint8_t DataBits = 8;
+    static constexpr uint8_t DataBytes = 2;
+    using LengthType = uint8_t;
+    static constexpr uint8_t LengthBytes = 1;
+    using CrcType = uint16_t;
+    static constexpr uint8_t CrcBytes = 2;
+    static constexpr bool FeatureSequential = true;
+    static constexpr bool FeatureFifo = true;
+    static constexpr bool FeatureIncrement = true;
+    static constexpr bool FeatureCompressed = true;
+    static constexpr bool FeatureInterrupt = true;
+    static constexpr bool FeatureReadModifyWrite = true;
+};
+static_assert(RAP::IsConfigurationType<CFG>);
+
+TEST_CASE("Generate UDP packets of every type", "[Serdes][UDP]")
+{
+    auto serdes = RAP::Serdes::Serdes<CFG>(4096);
+    auto xport = RAP::Transport::makeSyncUdpTransport("localhost", 1234, "localhost", 4321, true);
+    auto server_xport = RAP::Transport::makeSyncUdpTransport("localhost", 4321, "localhost", 1234, false);
+    uint8_t txn_id = 0;
+    xport->send(serdes.encodeCommand(RAP::Serdes::ReadSingleCommand<CFG>{
+        .transaction_id = txn_id++,
+        .addr = 0x123456,
+    }));
+    xport->send(serdes.encodeCommand(RAP::Serdes::WriteSingleCommand<CFG>{
+        .transaction_id = txn_id++,
+        .posted = false,
+        .addr = 0x7891011,
+        .data = 0xABCD,
+    }));
+    xport->send(serdes.encodeCommand(RAP::Serdes::WriteSingleCommand<CFG>{
+        .transaction_id = txn_id++,
+        .posted = true,
+        .addr = 0x45684,
+        .data = 0xCDEF,
+    }));
+    xport->send(serdes.encodeCommand(RAP::Serdes::ReadSeqCommand<CFG>{
+        .transaction_id = txn_id++,
+        .start_addr = 0x646518,
+        .increment = 0, // FIFO
+        .count = 3,
+    }));
+    xport->send(serdes.encodeCommand(RAP::Serdes::ReadSeqCommand<CFG>{
+        .transaction_id = txn_id++,
+        .start_addr = 0x646518,
+        .increment = 4, // SEQ
+        .count = 3,
+    }));
+    xport->send(serdes.encodeCommand(RAP::Serdes::ReadSeqCommand<CFG>{
+        .transaction_id = txn_id++,
+        .start_addr = 0x646518,
+        .increment = 13, // INCR
+        .count = 3,
+    }));
+    xport->send(serdes.encodeCommand(RAP::Serdes::WriteSeqCommand<CFG>{
+        .transaction_id = txn_id++,
+        .posted = false,
+        .start_addr = 0x1685168,
+        .increment = 0, // FIFO
+        .data = std::vector<CFG::DataType>{0xAA,0xBB,0xCC},
+    }));
+    xport->send(serdes.encodeCommand(RAP::Serdes::WriteSeqCommand<CFG>{
+        .transaction_id = txn_id++,
+        .posted = true,
+        .start_addr = 0x96874,
+        .increment = 0, // FIFO
+        .data = std::vector<CFG::DataType>{0xDD,0xEE,0xFF},
+    }));
+    xport->send(serdes.encodeCommand(RAP::Serdes::WriteSeqCommand<CFG>{
+        .transaction_id = txn_id++,
+        .posted = false,
+        .start_addr = 0x1685168,
+        .increment = 4, // SEQ
+        .data = std::vector<CFG::DataType>{0xAA,0xBB,0xCC},
+    }));
+    xport->send(serdes.encodeCommand(RAP::Serdes::WriteSeqCommand<CFG>{
+        .transaction_id = txn_id++,
+        .posted = true,
+        .start_addr = 0x96874,
+        .increment = 4, // SEQ
+        .data = std::vector<CFG::DataType>{0xDD,0xEE,0xFF},
+    }));
+    xport->send(serdes.encodeCommand(RAP::Serdes::WriteSeqCommand<CFG>{
+        .transaction_id = txn_id++,
+        .posted = false,
+        .start_addr = 0x1685168,
+        .increment = 13, // INCR
+        .data = std::vector<CFG::DataType>{0xAA,0xBB,0xCC},
+    }));
+    xport->send(serdes.encodeCommand(RAP::Serdes::WriteSeqCommand<CFG>{
+        .transaction_id = txn_id++,
+        .posted = true,
+        .start_addr = 0x96874,
+        .increment = 13, // INCR
+        .data = std::vector<CFG::DataType>{0xDD,0xEE,0xFF},
+    }));
+    xport->send(serdes.encodeCommand(RAP::Serdes::ReadCompCommand<CFG>{
+        .transaction_id = txn_id++,
+        .addresses = std::vector<CFG::AddressType>{0x1122,0x3344, 0x5566},
+    }));
+    xport->send(serdes.encodeCommand(RAP::Serdes::WriteCompCommand<CFG>{
+        .transaction_id = txn_id++,
+        .posted = false,
+        .addr_data = std::vector<std::pair<CFG::AddressType, CFG::DataType>>{
+            std::pair<CFG::AddressType, CFG::DataType>{0x11,0xAA},
+            std::pair<CFG::AddressType, CFG::DataType>{0x22,0xBB},
+            std::pair<CFG::AddressType, CFG::DataType>{0x33,0xCC},
+        },
+    }));
+    xport->send(serdes.encodeCommand(RAP::Serdes::WriteCompCommand<CFG>{
+        .transaction_id = txn_id++,
+        .posted = true,
+        .addr_data = std::vector<std::pair<CFG::AddressType, CFG::DataType>>{
+            std::pair<CFG::AddressType, CFG::DataType>{0x11,0xAA},
+            std::pair<CFG::AddressType, CFG::DataType>{0x22,0xBB},
+            std::pair<CFG::AddressType, CFG::DataType>{0x33,0xCC},
+        },
+    }));
+    xport->send(serdes.encodeCommand(RAP::Serdes::ReadModifyWriteCommand<CFG>{
+        .transaction_id = txn_id++,
+        .posted = false,
+        .addr = 0x53587,
+        .data = 0xCDEF,
+        .mask = 0xFEDC,
+    }));
+    xport->send(serdes.encodeCommand(RAP::Serdes::ReadModifyWriteCommand<CFG>{
+        .transaction_id = txn_id++,
+        .posted = true,
+        .addr = 0x68453854,
+        .data = 0xFABC,
+        .mask = 0xCBAF,
+    }));
+
+    xport->send(serdes.encodeResponse(RAP::Serdes::ReadSingleAckResponse<CFG>{
+        .transaction_id = txn_id++,
+        .data = 0xCAFE,
+    }));
+    xport->send(serdes.encodeResponse(RAP::Serdes::WriteSingleAckResponse<CFG>{
+        .transaction_id = txn_id++,
+    }));
+    xport->send(serdes.encodeResponse(RAP::Serdes::ReadSeqAckResponse<CFG>{
+        .transaction_id = txn_id++,
+        .data = std::vector<CFG::DataType>{0xABCD, 0xFEDC},
+    }));
+    xport->send(serdes.encodeResponse(RAP::Serdes::WriteSeqAckResponse<CFG>{
+        .transaction_id = txn_id++,
+    }));
+    xport->send(serdes.encodeResponse(RAP::Serdes::ReadCompAckResponse<CFG>{
+        .transaction_id = txn_id++,
+        .data = std::vector<CFG::DataType>{0x1234, 0x5678},
+    }));
+    xport->send(serdes.encodeResponse(RAP::Serdes::WriteCompAckResponse<CFG>{
+        .transaction_id = txn_id++,
+    }));
+    xport->send(serdes.encodeResponse(RAP::Serdes::ReadSingleNakResponse<CFG>{
+        .transaction_id = txn_id++,
+        .status = 0x1111,
+    }));
+    xport->send(serdes.encodeResponse(RAP::Serdes::WriteSingleNakResponse<CFG>{
+        .transaction_id = txn_id++,
+        .status = 0x2222,
+    }));
+    xport->send(serdes.encodeResponse(RAP::Serdes::ReadSeqNakResponse<CFG>{
+        .transaction_id = txn_id++,
+        .status = 0x3333,
+    }));
+    xport->send(serdes.encodeResponse(RAP::Serdes::WriteSeqNakResponse<CFG>{
+        .transaction_id = txn_id++,
+        .status = 0x4444,
+    }));
+    xport->send(serdes.encodeResponse(RAP::Serdes::ReadCompNakResponse<CFG>{
+        .transaction_id = txn_id++,
+        .status = 0x5555,
+    }));
+    xport->send(serdes.encodeResponse(RAP::Serdes::WriteCompNakResponse<CFG>{
+        .transaction_id = txn_id++,
+        .status = 0x6666,
+    }));
+    xport->send(serdes.encodeResponse(RAP::Serdes::ReadmodifywriteSingleAckResponse<CFG>{
+        .transaction_id = txn_id++,
+    }));
+    xport->send(serdes.encodeResponse(RAP::Serdes::ReadmodifywriteSingleNakResponse<CFG>{
+        .transaction_id = txn_id++,
+        .status = 0x7777,
+    }));
+    xport->send(serdes.encodeResponse(RAP::Serdes::Interrupt<CFG>{
+        .transaction_id = txn_id++,
+        .status = 0x8888,
+    }));
+}
