@@ -80,12 +80,12 @@ protected:
 };
 
 struct RapCfg {
-    using AddressType = uint8_t;
+    using AddressType = uint32_t;
     static constexpr uint8_t AddressBits = 8;
-    static constexpr uint8_t AddressBytes = 1;
-    using DataType = uint8_t;
+    static constexpr uint8_t AddressBytes = 4;
+    using DataType = uint16_t;
     static constexpr uint8_t DataBits = 8;
-    static constexpr uint8_t DataBytes = 1;
+    static constexpr uint8_t DataBytes = 2;
     using LengthType = uint8_t;
     static constexpr uint8_t LengthBytes = 1;
     using CrcType = uint16_t;
@@ -105,6 +105,15 @@ struct RapCfg_Incr : RapCfg { static constexpr bool FeatureIncrement = true; };
 struct RapCfg_Comp : RapCfg { static constexpr bool FeatureCompressed = true; };
 struct RapCfg_Intr : RapCfg { static constexpr bool FeatureInterrupt = true; };
 struct RapCfg_RMW  : RapCfg { static constexpr bool FeatureReadModifyWrite = true; };
+struct RapCfg_All : RapCfg
+{
+    static constexpr bool FeatureSequential = true;
+    static constexpr bool FeatureFifo = true;
+    static constexpr bool FeatureIncrement = true;
+    static constexpr bool FeatureCompressed = true;
+    static constexpr bool FeatureInterrupt = true;
+    static constexpr bool FeatureReadModifyWrite = true;
+};
 
 #define GEN_INCR       GENERATE(Catch::Generators::take(1, Catch::Generators::random<uint8_t>(0, 0xFF)))
 #define GEN_ADDR       GENERATE(Catch::Generators::take(1, Catch::Generators::random<CFG::AddressType>(0, (1ULL << CFG::AddressBits) - 1)))
@@ -112,17 +121,23 @@ struct RapCfg_RMW  : RapCfg { static constexpr bool FeatureReadModifyWrite = tru
 #define GEN_ADDR_RNG   GENERATE(Catch::Generators::take(1, Catch::Generators::chunk(8, Catch::Generators::random<CFG::AddressType>(0, (1ULL << CFG::AddressBits) - 1))))
 #define GEN_DATA_RNG   GENERATE(Catch::Generators::take(1, Catch::Generators::chunk(8, Catch::Generators::random<CFG::DataType>(0, (1ULL << CFG::DataBits) - 1))))
 
+
 TEST_CASE("Explore RapRegisterTarget", "[Explore][RRT]")
 {
-    using CFG = RapCfg_Comp;
+    using CFG = RapCfg_All;
+    #if 0
     auto [client_xport, server_xport] = RAP::Transport::makeSyncPairedIpcTransport(512);
+    #else
+    auto client_xport = RAP::Transport::makeSyncUdpTransport("localhost", 1234, "localhost", 4321, true);
+    auto server_xport = RAP::Transport::makeSyncUdpTransport("localhost", 4321, "localhost", 1234, false);
+    #endif
     client_xport->setTimeout(std::chrono::seconds(1));
     auto rap_target = RAP::RTF::RapRegisterTarget<CFG>("Rap Target", std::move(client_xport));
 
     auto simple_target = std::make_shared<AdvDummyRegisterTarget<CFG::AddressType, CFG::DataType>>("Adv Dummy");
     auto rap_server_adapter = RAP::RTF::RapServerAdapter<CFG>(std::move(server_xport), simple_target);
 
-    auto fluent_target = RTF::FluentRegisterTarget{ rap_target };
+    auto fluent_target = RTF::FluentRegisterTarget{rap_target};
 
     typename CFG::DataType out_data{};
     std::vector<typename CFG::DataType> data_vec(size_t(2));
@@ -145,7 +160,7 @@ TEST_CASE("Explore RapRegisterTarget", "[Explore][RRT]")
         .compWrite(addr_data_vec, "Comp")
         #endif
         .readModifyWrite(0x1, 0x2, 0x3, "RMW")
-    ;
+        ;
 
     #if 0
     SECTION("Write & Read")
